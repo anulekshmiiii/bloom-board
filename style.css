@@ -287,8 +287,12 @@ h1 {
   margin-bottom: 10px;
 }
 
+/* Ensure selects sit above date-wrap on mobile so category tap opens dropdown, not date picker */
 .controls select {
+  position: relative;
+  z-index: 2;
   flex: 1;
+  min-width: 0;
   padding: 10px 10px;
   border-radius: 12px;
   border: 1px solid #f3c1d8;
@@ -328,14 +332,17 @@ h1 {
   background: #ec407a;
 }
 
-/* DATE WRAPPER */
+/* DATE WRAPPER - lower z-index so category/priority selects receive taps first on mobile */
 .date-wrap {
   position: relative;
+  z-index: 1;
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 38px;
+  overflow: hidden;
 }
 
 .date-hidden {
@@ -344,6 +351,8 @@ h1 {
   opacity: 0;
   cursor: pointer;
   margin: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .calendar-icon {
@@ -803,6 +812,7 @@ li.fade-out {
 
 #notesHistorySelect {
   appearance: none;
+  -webkit-appearance: none;
   padding: 6px 28px 6px 22px;
   border-radius: 12px;
   border: 1px solid #f3c1d8;
@@ -830,6 +840,39 @@ li.fade-out {
   font-family: 'Nunito', sans-serif;
   font-size: 13px;
   padding: 6px 12px;
+}
+
+/* HABITS ADD ROW - keeps input + button inside container on mobile */
+.habits-add-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.habit-input {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 11px 12px;
+  border-radius: 14px;
+  border: 1px solid #f3c1d8;
+  background: #fff6fa;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+}
+
+.habit-add-btn {
+  flex: 0 0 auto;
+  padding: 11px 16px;
+  border-radius: 14px;
+  background: #f06292;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* HABITS STYLES */
@@ -3013,6 +3056,16 @@ body.dark-mode h3 {
   .bloom-teddy {
     width: 70px;
     height: 85px;
+  }
+}
+
+/* MOBILE - restore native select dropdown behavior (avoids checkbox-style UI) */
+@media (max-width: 480px), (pointer: coarse) {
+  .controls select,
+  #notesHistorySelect,
+  .notes-dropdown {
+    -webkit-appearance: menulist;
+    appearance: menulist;
   }
 }
 

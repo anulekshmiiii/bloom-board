@@ -1886,8 +1886,9 @@ function handleDragMove(e) {
   teddy.style.right = 'auto';
 }
 
-function handleDragEnd() {
+function handleDragEnd(e) {
   if (!isDragging) return;
+  const wasTap = !didDragMove;
   isDragging = false;
 
   const teddy = document.getElementById('bloomTeddy');
@@ -1899,6 +1900,9 @@ function handleDragEnd() {
   // Only snap position when user actually dragged; keep teddy in place on simple click
   if (didDragMove) {
     snapToSafePosition();
+  } else if (e && e.type === 'touchend') {
+    // On mobile, touchstart preventDefault() blocks the synthetic click — trigger dialogue on tap
+    showTeddyMessage('You\'re doing amazing! 💕');
   }
 }
 
