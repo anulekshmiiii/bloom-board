@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Bloom Board - My Cute To-Do List</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Quicksand:wght@400;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div id="reminderPopup">
+    <span id="reminderText"></span>
+  </div>
+
+  <div id="bgAnimation"></div>
+
+  <!-- BLOOM TEDDY MASCOT - Watercolor Illustration Style -->
+  <div class="bloom-teddy" id="bloomTeddy">
+    <!-- Soft Glow Aura -->
+    <div class="teddy-glow"></div>
+
+    <!-- Main Teddy SVG -->
+    <svg class="teddy-svg" viewBox="0 0 140 160" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- Floating Music Notes -->
+      <defs>
+        <radialGradient id="sparkleGradient" cx="50%" cy="50%">
+          <stop offset="0%" style="stop-color:#fff9e6;stop-opacity:0.9" />
+          <stop offset="50%" style="stop-color:#fce4ec;stop-opacity:0.6" />
+          <stop offset="100%" style="stop-color:#f8bbd0;stop-opacity:0" />
+        </radialGradient>
+        <!-- Eye Iris Gradient -->
+        <radialGradient id="eyeIrisGradient" cx="40%" cy="40%">
+          <stop offset="0%" style="stop-color:#fce4ec;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#f8bbd0;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#e1bee7;stop-opacity:1" />
+        </radialGradient>
+        <!-- Eye Sparkle Gradient -->
+        <radialGradient id="eyeSparkleGradient" cx="30%" cy="30%">
+          <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#fff9e6;stop-opacity:0.8" />
+          <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+        </radialGradient>
+        <!-- Bow Gradients -->
+        <linearGradient id="bowRibbonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#fce4ec;stop-opacity:1" />
+          <stop offset="30%" style="stop-color:#f8bbd0;stop-opacity:1" />
+          <stop offset="70%" style="stop-color:#f4a5c1;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#f8bbd0;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="bowHighlightGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4" />
+          <stop offset="50%" style="stop-color:#ffffff;stop-opacity:0.1" />
+          <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+        </linearGradient>
+        <linearGradient id="bowKnotGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#f4a5c1;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#ed7fa8;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#f4a5c1;stop-opacity:1" />
+        </linearGradient>
+        <filter id="bowShadow">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" />
+          <feOffset dx="0" dy="1" result="offsetblur" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="0.3" />
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <!-- Body -->
+      <ellipse cx="70" cy="110" rx="42" ry="48" fill="#d4b896" class="teddy-body-shape"
+        style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1))" />
+
+      <!-- Head Group (for rotation) -->
+      <g class="teddy-head-group" id="headGroup" transform-origin="70 55">
+        <!-- Head -->
+        <circle cx="70" cy="55" r="38" fill="#d9b899" class="teddy-head-shape"
+          style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1))" />
+
+        <!-- Left Ear -->
+        <circle cx="38" cy="25" r="20" fill="#d4b896" class="teddy-ear teddy-ear-left"
+          style="filter: drop-shadow(inset -2px -2px 6px rgba(0,0,0,0.1))" />
+
+        <!-- Right Ear -->
+        <circle cx="102" cy="25" r="20" fill="#d4b896" class="teddy-ear teddy-ear-right"
+          style="filter: drop-shadow(inset -2px -2px 6px rgba(0,0,0,0.1))" />
+      </g>
+
+      <!-- Left Blush -->
+      <ellipse cx="42" cy="60" rx="14" ry="12" fill="#f4c0c0" opacity="0.6" class="teddy-blush" id="leftBlush" />
+
+      <!-- Right Blush -->
+      <ellipse cx="98" cy="60" rx="14" ry="12" fill="#f4c0c0" opacity="0.6" class="teddy-blush" id="rightBlush" />
+
+      <!-- Left Eye Group -->
+      <g class="teddy-eye-group" id="leftEyeGroup">
+        <!-- Eye White -->
+        <ellipse cx="60" cy="50" rx="7" ry="8" fill="#ffffff" class="eye-white" id="leftEyeWhite" />
+        <!-- Iris -->
+        <circle cx="60" cy="50" r="5.5" fill="url(#eyeIrisGradient)" class="eye-iris" id="leftEyeIris" />
+        <!-- Pupil -->
+        <circle cx="60" cy="50" r="3" fill="#6b5344" class="eye-pupil" id="leftEyePupil" />
+        <!-- Sparkle Highlight -->
+        <circle cx="58" cy="48" r="1.5" fill="url(#eyeSparkleGradient)" class="eye-sparkle-highlight"
+          id="leftEyeSparkle" />
+        <!-- Second Sparkle -->
+        <circle cx="61.5" cy="51" r="0.8" fill="#ffffff" opacity="0.9" class="eye-sparkle-tiny" id="leftEyeSparkle2" />
+      </g>
+
+      <!-- Right Eye Group -->
+      <g class="teddy-eye-group" id="rightEyeGroup">
+        <!-- Eye White -->
+        <ellipse cx="80" cy="50" rx="7" ry="8" fill="#ffffff" class="eye-white" id="rightEyeWhite" />
+        <!-- Iris -->
+        <circle cx="80" cy="50" r="5.5" fill="url(#eyeIrisGradient)" class="eye-iris" id="rightEyeIris" />
+        <!-- Pupil -->
+        <circle cx="80" cy="50" r="3" fill="#6b5344" class="eye-pupil" id="rightEyePupil" />
+        <!-- Sparkle Highlight -->
+        <circle cx="78" cy="48" r="1.5" fill="url(#eyeSparkleGradient)" class="eye-sparkle-highlight"
+          id="rightEyeSparkle" />
+        <!-- Second Sparkle -->
+        <circle cx="81.5" cy="51" r="0.8" fill="#ffffff" opacity="0.9" class="eye-sparkle-tiny" id="rightEyeSparkle2" />
+      </g>
+
+      <!-- Sparkle Glow Elements (for sparkle effect) -->
+      <circle cx="60" cy="50" r="8" class="eye-sparkle-left" opacity="0" />
+      <circle cx="80" cy="50" r="8" class="eye-sparkle-right" opacity="0" />
+
+      <!-- Nose -->
+      <circle cx="70" cy="63" r="6" fill="#8b6f47" />
+
+      <!-- Smile -->
+      <path d="M 70 63 Q 70 68 76 70" stroke="#8b6f47" stroke-width="2.5" fill="none" stroke-linecap="round" />
+
+      <!-- Left Front Paw (tucked in front) -->
+      <g class="teddy-front-paw-left">
+        <circle cx="58" cy="100" r="10" fill="#d9b899"
+          style="filter: drop-shadow(inset -2px -2px 4px rgba(0,0,0,0.08))" />
+        <!-- Paw Pad -->
+        <ellipse cx="58" cy="102" rx="4" ry="3" fill="#f4c0c0" opacity="0.6" />
+      </g>
+
+      <!-- Right Front Paw (tucked in front) -->
+      <g class="teddy-front-paw-right">
+        <circle cx="82" cy="100" r="10" fill="#d9b899"
+          style="filter: drop-shadow(inset -2px -2px 4px rgba(0,0,0,0.08))" />
+        <!-- Paw Pad -->
+        <ellipse cx="82" cy="102" rx="4" ry="3" fill="#f4c0c0" opacity="0.6" />
+      </g>
+
+      <!-- Left Paw (feet) -->
+      <circle cx="45" cy="145" r="16" fill="#d9b899"
+        style="filter: drop-shadow(inset -2px -2px 5px rgba(0,0,0,0.08))" />
+
+      <!-- Right Paw (feet) -->
+      <circle cx="95" cy="145" r="16" fill="#d9b899"
+        style="filter: drop-shadow(inset -2px -2px 5px rgba(0,0,0,0.08))" />
+
+      <!-- Left Headphone Cup -->
+      <g class="headphone-left">
+        <ellipse cx="22" cy="45" rx="16" ry="22" fill="#6b6b6b" />
+        <ellipse cx="22" cy="45" rx="12" ry="18" fill="#808080" />
+      </g>
+
+      <!-- Right Headphone Cup -->
+      <g class="headphone-right">
+        <ellipse cx="118" cy="45" rx="16" ry="22" fill="#6b6b6b" />
+        <ellipse cx="118" cy="45" rx="12" ry="18" fill="#808080" />
+      </g>
+
+      <!-- Headphone Band Left -->
+      <path d="M 30 28 Q 25 15 50 12 Q 60 11 70 11 Q 80 11 90 12 Q 115 15 110 28" stroke="#7a7a7a" stroke-width="7"
+        fill="none" stroke-linecap="round" />
+
+      <!-- Soft Plush Bow (on left ear) -->
+      <g class="teddy-bow" id="teddyBow" transform="translate(38, 20)">
+        <!-- Left Ribbon Loop -->
+        <path d="M -6,2 Q -9,-2 -7,-6 Q -5,-8 -2,-6 Q -1,-5 -2,-2 Q -4,-1 -6,2 Z" fill="url(#bowRibbonGradient)"
+          filter="url(#bowShadow)" class="bow-loop-left" />
+        <!-- Left Loop Highlight -->
+        <path d="M -6,2 Q -7,-1 -4,-3 Q -2,-2 -3,-1 Q -5,0 -6,2 Z" fill="url(#bowHighlightGradient)" opacity="0.6"
+          class="bow-highlight-left" />
+
+        <!-- Right Ribbon Loop -->
+        <path d="M 6,2 Q 9,-2 7,-6 Q 5,-8 2,-6 Q 1,-5 2,-2 Q 4,-1 6,2 Z" fill="url(#bowRibbonGradient)"
+          filter="url(#bowShadow)" class="bow-loop-right" />
+        <!-- Right Loop Highlight -->
+        <path d="M 6,2 Q 7,-1 4,-3 Q 2,-2 3,-1 Q 5,0 6,2 Z" fill="url(#bowHighlightGradient)" opacity="0.6"
+          class="bow-highlight-right" />
+
+        <!-- Center Knot -->
+        <ellipse cx="0" cy="-4" rx="3" ry="4" fill="url(#bowKnotGradient)" filter="url(#bowShadow)" class="bow-knot" />
+        <!-- Knot Highlight -->
+        <ellipse cx="0" cy="-5" rx="2" ry="2.5" fill="url(#bowHighlightGradient)" opacity="0.5"
+          class="bow-knot-highlight" />
+
+        <!-- Tiny Stitched Edge Detail -->
+        <path d="M -4,0 Q -2,-2 0,0" stroke="#ed7fa8" stroke-width="0.3" fill="none" opacity="0.4"
+          class="bow-stitch-left" />
+        <path d="M 4,0 Q 2,-2 0,0" stroke="#ed7fa8" stroke-width="0.3" fill="none" opacity="0.4"
+          class="bow-stitch-right" />
+      </g>
+    </svg>
+
+
+
+    <!-- Floating Music Notes -->
+    <div class="music-note music-note-1">♪</div>
+    <div class="music-note music-note-2">♪</div>
+
+    <!-- Dialogue Bubble -->
+    <div class="teddy-bubble" id="teddyBubble"></div>
+  </div>
+
+  <div class="floating-hearts">
+    <div class="heart">💕</div>
+    <div class="heart">💕</div>
+    <div class="heart">💕</div>
+    <div class="heart">💕</div>
+    <div class="heart">💕</div>
+  </div>
+
+  <div class="container">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">☀️</button>
+
+    <h1>Bloom Board 🌸</h1>
+
+
+
+    <div class="tabs-scroll-wrapper">
+      <div class="tabs-scroll-container" id="tabsContainer">
+        <button class="tab-btn active" data-tab="dashboard" onclick="showTab('dashboard')">
+          <span class="tab-icon">🏠</span>
+          <span class="tab-label">Home</span>
+        </button>
+        <button class="tab-btn" data-tab="tasks" onclick="showTab('tasks')">
+          <span class="tab-icon">✓</span>
+          <span class="tab-label">Tasks</span>
+        </button>
+        <button class="tab-btn" data-tab="notes" onclick="showTab('notes')">
+          <span class="tab-icon">📝</span>
+          <span class="tab-label">Notes</span>
+        </button>
+        <button class="tab-btn" data-tab="habits" onclick="showTab('habits')">
+          <span class="tab-icon">🔥</span>
+          <span class="tab-label">Habits</span>
+        </button>
+        <button class="tab-btn" data-tab="mood" onclick="showTab('mood')">
+          <span class="tab-icon">😊</span>
+          <span class="tab-label">Mood</span>
+        </button>
+        <button class="tab-btn" data-tab="letter" onclick="showTab('letter')">
+          <span class="tab-icon">💌</span>
+          <span class="tab-label">Letter</span>
+        </button>
+        <button class="tab-btn" data-tab="timer" onclick="showTab('timer')">
+          <span class="tab-icon">🫖</span>
+          <span class="tab-label">Timer</span>
+        </button>
+        <button class="tab-btn" data-tab="garden" onclick="showTab('garden')">
+          <span class="tab-icon">🌷</span>
+          <span class="tab-label">Garden</span>
+        </button>
+        <button class="tab-btn" data-tab="reflection" onclick="showTab('reflection')">
+          <span class="tab-icon">🌙</span>
+          <span class="tab-label">Reflect</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="pages-container" id="pagesContainer"></div>
+
+    <!-- DASHBOARD TAB -->
+    <div id="dashboardTab" class="tab-content active">
+      <div class="greeting">
+
+        <div class="greeting-divider"></div>
+      </div>
+
+      <div class="quick-cards">
+        <div class="card-item">
+          <div class="card-icon">✓</div>
+          <div class="card-label">Tasks</div>
+          <div class="card-count" id="taskCount">0</div>
+        </div>
+        <div class="card-item">
+          <div class="card-icon">📝</div>
+          <div class="card-label">Notes</div>
+          <div class="card-count">Today</div>
+        </div>
+        <div class="card-item">
+          <div class="card-icon">🔥</div>
+          <div class="card-label">Streak</div>
+          <div class="card-count" id="streakCount">0</div>
+        </div>
+      </div>
+
+      <div class="daily-prompt-card">
+        <p class="prompt-label">Today's Thought 💖</p>
+        <p class="prompt-text" id="dailyPrompt">Today, what made you smile?</p>
+      </div>
+
+      <div class="motivational-quote">
+        <span class="quote-heart">💖</span>
+        <p id="dailyQuote">You are stronger than you think.</p>
+        <span class="quote-author">- Anonymous</span>
+      </div>
+    </div>
+
+    <!-- TASKS TAB -->
+    <div id="tasksTab" class="tab-content">
+
+      <div class="input-wrapper">
+        <div class="input-row">
+          <input id="taskInput" placeholder="Enter a task" onkeypress="handleKey(event)">
+        </div>
+
+        <div class="controls">
+          <select id="taskPriority">
+            <option value="low">Low 🌿</option>
+            <option value="medium">Medium 🍊</option>
+            <option value="high">High 🔥</option>
+          </select>
+
+          <div class="date-wrap" onclick="openTaskDatePicker()">
+            <input type="date" id="taskDate" class="date-hidden">
+            <span class="calendar-icon">📅</span>
+          </div>
+
+          <select id="taskCategory">
+            <option value="study">📚 Study</option>
+            <option value="personal">🌷 Personal</option>
+            <option value="health">💪 Health</option>
+          </select>
+        </div>
+
+        <button onclick="addTask()" class="btn-add">Add Task</button>
+      </div>
+
+      <div class="filters">
+        <button onclick="filterTasks('all')" class="filter-btn active">All</button>
+        <button onclick="filterTasks('active')" class="filter-btn">Active</button>
+        <button onclick="filterTasks('completed')" class="filter-btn">Completed</button>
+      </div>
+
+      <div id="progressContainer">
+        <div id="progressBar">
+          <div id="progressFill"></div>
+        </div>
+        <p id="progressText">0/0 tasks done</p>
+      </div>
+
+      <ul id="taskList"></ul>
+      <p id="emptyMessage">No tasks yet 🌸</p>
+      <p id="taskCounter"></p>
+
+      <div class="footer" id="footer">
+        <button class="clear-btn" onclick="clearAll()">Clear All</button>
+      </div>
+
+    </div>
+
+    <!-- NOTES TAB -->
+    <div id="notesTab" class="tab-content">
+      <div class="notes-card">
+        <div class="notes-header">
+          <span class="notes-title">📝 Daily Notes</span>
+          <span id="notesDate" class="notes-date-display"></span>
+        </div>
+
+        <div class="notes-history-wrap">
+          <select id="notesHistorySelect" class="notes-dropdown">
+            <option value="">History ♡</option>
+          </select>
+        </div>
+
+        <textarea id="dailyNote" placeholder="Write your thoughts, plans, or reminders..."
+          class="journal-textarea"></textarea>
+
+        <div class="notes-status" id="notesStatus">
+          Saved
+        </div>
+      </div>
+    </div>
+
+    <!-- HABITS TAB -->
+    <div id="habitsTab" class="tab-content">
+      <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+        <input id="habitInput" placeholder="Add a habit (e.g., Drink water)"
+          style="flex: 1; padding: 11px 12px; border-radius: 14px; border: 1px solid #f3c1d8; background: #fff6fa; font-size: 14px; font-family: 'Poppins', sans-serif;">
+        <button onclick="addHabit()"
+          style="padding: 11px 16px; border-radius: 14px; background: #f06292; color: white; border: none; cursor: pointer; font-size: 14px;">Add</button>
+      </div>
+      <ul id="habitList"></ul>
+      <p id="emptyHabits" style="color: #c2185b; font-size: 14px; margin-top: 10px; opacity: 0.7;">No habits yet 🌿</p>
+    </div>
+
+    <!-- MOOD TRACKER TAB -->
+    <div id="moodTab" class="tab-content">
+      <h2>How are you feeling today?</h2>
+
+      <div class="mood-emoji" id="moodEmoji">😊</div>
+
+      <div class="mood-slider-wrapper">
+        <input type="range" id="moodSlider" min="1" max="5" value="3" class="mood-slider">
+        <div class="mood-labels">
+          <span>😢</span>
+          <span>😕</span>
+          <span>😐</span>
+          <span>🙂</span>
+          <span>😄</span>
+        </div>
+      </div>
+
+      <button onclick="saveMood()" class="btn-mood-save">Save Mood</button>
+
+      <button onclick="toggleMoodChart()" class="mood-chart-btn">📊 Mood Chart</button>
+
+      <div id="moodHistory" class="mood-history"></div>
+    </div>
+
+    <!-- MOOD CHART MODAL -->
+    <div id="moodChartModal" class="mood-chart-modal">
+      <div class="mood-chart-container">
+        <button onclick="toggleMoodChart()" class="chart-close-btn">✕</button>
+
+        <h3>Your Mood Insights</h3>
+
+        <div class="chart-tabs">
+          <button class="chart-tab-btn active" onclick="switchChartView('weekly')">Weekly</button>
+          <button class="chart-tab-btn" onclick="switchChartView('monthly')">Monthly</button>
+          <button class="chart-tab-btn" onclick="switchChartView('yearly')">Yearly</button>
+        </div>
+
+        <div id="weeklyChart" class="chart-view active">
+          <canvas id="weeklyCanvas"></canvas>
+          <p class="chart-info" id="weeklyInfo"></p>
+        </div>
+
+        <div id="monthlyChart" class="chart-view">
+          <canvas id="monthlyCanvas"></canvas>
+          <p class="chart-info" id="monthlyInfo"></p>
+        </div>
+
+        <div id="yearlyChart" class="chart-view">
+          <canvas id="yearlyCanvas"></canvas>
+          <p class="chart-info" id="yearlyInfo"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FUTURE LETTER TAB -->
+    <div id="letterTab" class="tab-content">
+      <h2>Write a Letter to Your Future Self 💌</h2>
+      <div class="letter-card">
+        <textarea id="letterContent" placeholder="Dear future me..." class="letter-textarea"></textarea>
+        <div class="letter-unlock-date">
+          <label>Unlock on:</label>
+          <input type="date" id="letterUnlockDate" class="letter-date-input">
+        </div>
+        <button onclick="saveLetter()" class="btn-save-letter">Save Letter</button>
+      </div>
+      <button onclick="togglePreviousLetters()" class="btn-previous-letters" id="previousLettersBtn">💌 Previous Letters</button>
+      <div id="lettersList" class="letters-list" style="display: none;"></div>
+    </div>
+
+    <!-- Letter popup (shown when a letter unlocks on open) -->
+    <div id="letterPopupOverlay" class="letter-popup-overlay" style="display: none;" onclick="if(event.target===this) closeLetterPopup()">
+      <div class="letter-popup">
+        <button onclick="closeLetterPopup()" class="letter-popup-close">✕</button>
+        <h3 class="letter-popup-title">💌 A letter from your past self</h3>
+        <p class="letter-popup-date" id="letterPopupDate"></p>
+        <div class="letter-popup-content" id="letterPopupContent"></div>
+        <button onclick="closeLetterPopup()" class="btn-close-letter-popup">Close</button>
+      </div>
+    </div>
+
+    <!-- FOCUS TIMER TAB -->
+    <div id="timerTab" class="tab-content">
+      <h2>Cozy Focus Timer 🫖</h2>
+      <div class="timer-card">
+        <!-- Focus Setup Panel -->
+        <div class="focus-setup-panel">
+          <div class="focus-group">
+            <label>Focus Type</label>
+            <div class="pill-selector">
+              <button class="pill-btn active" data-type="study" onclick="setFocusType('study')">📚 Study</button>
+              <button class="pill-btn" data-type="work" onclick="setFocusType('work')">💼 Work</button>
+            </div>
+          </div>
+
+          <div class="focus-group">
+            <label>Ambient Sound</label>
+            <div class="pill-selector">
+              <button class="pill-btn" data-sound="rain" onclick="setAmbientSound('rain')">🌧 Rain</button>
+              <button class="pill-btn" data-sound="cafe" onclick="setAmbientSound('cafe')">☕ Cafe</button>
+              <button class="pill-btn active" data-sound="quiet" onclick="setAmbientSound('quiet')">🤍 Quiet</button>
+            </div>
+          </div>
+
+          <div class="ambient-toggle-wrapper">
+            <span>✨ Ambient Mode</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="ambientToggle" onchange="toggleAmbientMode()">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="timer-display" id="timerDisplay">25:00</div>
+          <div class="timer-preset-buttons">
+            <button onclick="setTimerDuration(25)" class="preset-btn">25 min</button>
+            <button onclick="setTimerDuration(45)" class="preset-btn">45 min</button>
+            <button onclick="setTimerDuration(60)" class="preset-btn">1 hour</button>
+          </div>
+          <div class="timer-controls">
+            <button onclick="startTimer()" id="timerStart" class="timer-btn">Start</button>
+            <button onclick="pauseTimer()" id="timerPause" class="timer-btn">Pause</button>
+            <button onclick="resetTimer()" class="timer-btn">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMORY GARDEN TAB -->
+    <div id="gardenTab" class="tab-content">
+      <h2>Memory Garden 🌷</h2>
+      <div class="garden-calendar">
+        <h3 id="gardenMonth"></h3>
+        <div id="gardenFlowers" class="flowers-grid"></div>
+      </div>
+    </div>
+
+    <!-- END-OF-DAY REFLECTION TAB -->
+    <div id="reflectionTab" class="tab-content">
+      <h2>End-of-Day Reflection 🌙</h2>
+      <div class="reflection-card">
+        <div class="reflection-prompt">
+          <label>One thing I did well today:</label>
+          <textarea id="reflectionWell" placeholder="..." class="reflection-textarea"></textarea>
+        </div>
+        <div class="reflection-prompt">
+          <label>One thing I felt today:</label>
+          <textarea id="reflectionFelt" placeholder="..." class="reflection-textarea"></textarea>
+        </div>
+        <div class="reflection-prompt">
+          <label>One thing I'm grateful for:</label>
+          <textarea id="reflectionGrateful" placeholder="..." class="reflection-textarea"></textarea>
+        </div>
+        <button onclick="saveReflection()" class="btn-save-reflection">Save Reflection</button>
+      </div>
+
+      <button onclick="toggleReflectionHistory()" class="btn-toggle-history" id="historyToggleBtn">
+        📖 History
+      </button>
+
+      <div id="reflectionsList" class="reflections-timeline" style="display: none;"></div>
+    </div>
+
+  </div>
+
+  <!-- Celebration overlay -->
+  <div id="celebrationOverlay">
+    <img
+      src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnM4NThkeXU2OG04Z2Y3eTZ0Z2s2ZWpmN3p2a2ZldTBlN3g3bzNkYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/xE6i72WK92RPavXXPc/giphy.gif"
+      alt="Happy dance">
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="script.js"></script>
+
+</body>
+
+</html>
