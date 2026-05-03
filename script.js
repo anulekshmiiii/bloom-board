@@ -1,3 +1,54 @@
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(() => console.log('Service Worker registered ✅'))
+    .catch(err => console.log('SW error:', err));
+}
+function checkUserName() {
+  const name = localStorage.getItem('bloomUserName');
+  if (!name) {
+    showNameSetup();
+  } else {
+    updateGreetingWithName(name);
+  }
+}
+
+function showNameSetup() {
+  const overlay = document.createElement('div');
+  overlay.className = 'name-setup-overlay';
+  overlay.id = 'nameSetupOverlay';
+  overlay.innerHTML = `
+    <div class="name-setup-box">
+      <div class="name-setup-icon" aria-hidden="true">🌸</div>
+      <h2>Welcome to Bloom Board!</h2>
+      <p class="name-setup-label">What should I call you?</p>
+      <input type="text" id="nameInput" placeholder="Your name..." maxlength="20">
+      <button onclick="saveUserName()">Let's bloom! 🌷</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('nameInput').focus(), 100);
+}
+
+function saveUserName() {
+  const input = document.getElementById('nameInput');
+  const name = input.value.trim();
+  if (!name) return;
+  localStorage.setItem('bloomUserName', name);
+  document.getElementById('nameSetupOverlay').remove();
+  updateGreetingWithName(name);
+  showReminder(`Welcome, ${name}! 🌸`);
+}
+
+function updateGreetingWithName(name) {
+  const hour = new Date().getHours();
+  let greeting;
+  if (hour < 12) greeting = `Good morning, ${name} ☀️`;
+  else if (hour < 17) greeting = `Good afternoon, ${name} 🌟`;
+  else greeting = `Good evening, ${name} 🌙`;
+
+  const el = document.getElementById('greetingText');
+  if (el) el.textContent = greeting;
+}
 // GLOBAL STATE
 let currentFilter = 'all';
 let tasks = [];
@@ -21,6 +72,7 @@ window.onload = function () {
   initBloomTeddy();
   renderLetters();
   checkAndShowUnlockedLettersOnOpen();
+  checkUserName();  // 👈 moved to last
 };
 
 // ============= TAB SWIPE AND SCROLL SUPPORT =============
@@ -117,39 +169,6 @@ function scrollTabIntoView(tabName) {
   });
 }
 
-// ============= TAB SWITCHING =============
-function showTab(tabName) {
-  // Hide all tab contents
-  const allTabs = document.querySelectorAll('.tab-content');
-  allTabs.forEach(tab => {
-    tab.classList.remove('active');
-    tab.style.display = 'none';
-  });
-
-  // Remove active class from all buttons
-  const allButtons = document.querySelectorAll('.tab-btn');
-  allButtons.forEach(btn => btn.classList.remove('active'));
-
-  // Show selected tab
-  const selectedTab = document.getElementById(`${tabName}Tab`);
-  if (selectedTab) {
-    selectedTab.classList.add('active');
-    selectedTab.style.display = 'block';
-  }
-
-  // Activate selected button
-  const selectedButton = document.querySelector(`[data-tab="${tabName}"]`);
-  if (selectedButton) {
-    selectedButton.classList.add('active');
-  }
-
-  // Special handling for specific tabs
-  if (tabName === 'garden') {
-    initGarden();
-  } else if (tabName === 'reflection') {
-    renderReflections();
-  }
-}
 
 // ============= DASHBOARD FUNCTIONS =============
 function initDashboard() {
@@ -161,6 +180,13 @@ function initDashboard() {
 }
 
 function updateGreeting() {
+  const nameRaw = localStorage.getItem('bloomUserName');
+  const name = nameRaw ? nameRaw.trim() : '';
+  if (name) {
+    updateGreetingWithName(name);
+    return;
+  }
+
   const hour = new Date().getHours();
   let greeting = 'Good morning, Sunshine ☀️';
 
@@ -370,7 +396,6 @@ function toggleComplete(checkbox) {
 
     if (checkbox.checked) {
       playCompleteSound();
-      showCelebration();
       showReminder('Task completed! Great job! 💕');
       triggerTeddyReaction('TASK_COMPLETE', 'Well done! 🌟');
       refreshGardenAfterCheckIn();
@@ -445,7 +470,7 @@ function filterTasks(filter) {
 }
 
 function clearAll() {
-  if (confirm('Delete all tasks?')) {
+  if (window.confirm('Delete all tasks?')) {
     tasks = [];
     updateStorage();
     renderTasks();
@@ -697,7 +722,9 @@ function toggleHabitComplete(habitId) {
   localStorage.setItem('allHabits', JSON.stringify(habits));
   renderHabits();
   showReminder('Habit checked! Keep it up! 🔥');
-  triggerTeddyReaction('TASK_COMPLETE');
+  if (index === -1) {
+    triggerTeddyReaction('TASK_COMPLETE');
+  }
   refreshGardenAfterCheckIn();
 }
 
@@ -737,14 +764,7 @@ function playCompleteSound() {
   audio.play().catch(e => console.log('Audio play blocked:', e));
 }
 
-function showCelebration() {
-  const overlay = document.getElementById('celebrationOverlay');
-  overlay.style.display = 'block';
 
-  setTimeout(() => {
-    overlay.style.display = 'none';
-  }, 3000);
-}
 
 function showReminder(message) {
   const popup = document.getElementById('reminderPopup');
@@ -1115,8 +1135,22 @@ document.addEventListener('DOMContentLoaded', function () {
   if (savedTheme === 'dark') {
     document.body.classList.add('dark-mode');
     document.getElementById('themeToggle').textContent = '🌙';
+    document.getElementById('bloomTeddy')?.classList.add('night-mode');
   }
 });
+function enableTeddyNightMode() {
+  const teddy = document.getElementById('bloomTeddy');
+  if (!teddy) return;
+  teddy.classList.add('night-mode');
+  showTeddyMessage('Goodnight! 🌙');
+}
+
+function disableTeddyNightMode() {
+  const teddy = document.getElementById('bloomTeddy');
+  if (!teddy) return;
+  teddy.classList.remove('night-mode');
+  showTeddyMessage('Good morning! ☀️');
+}
 
 // ============= MASCOT FUNCTIONS =============
 function showMascotMessage(message) {
@@ -1393,7 +1427,6 @@ window.addEventListener('load', function () {
   initGarden();
   renderLetters();
   renderReflections();
-  initBloomTeddy();
 });
 
 // ============= BLOOM TEDDY MASCOT =============
@@ -1405,39 +1438,418 @@ let eyeFollowIdleTimeout = null;
 let lastMouseX = null;
 let lastMouseY = null;
 
-function initBloomTeddy() {
+let currentEmotion = 'DEFAULT';
+let emotionTimeout;
+const TEDDY_STATES = {
+  DEFAULT: { eye: 'normal', motion: 'breathe' },
+  HAPPY: { eye: 'sparkle', motion: 'bounce' },
+  EXCITED: { eye: 'sparkle', motion: 'hop' },
+  SHY: { eye: 'shy', motion: 'shy' },
+  FOCUSED: { eye: 'focused', motion: 'breatheSlow' },
+  SLEEPY: { eye: 'sleepy', motion: 'breatheSlow' },
+  LOW: { eye: 'sad', motion: 'low' },
+  NEUTRAL: { eye: 'normal', motion: 'breathe' }
+};
+
+/** Bottom-edge walk / sit-at-edges / 60s sleep (no wandering, no drag). */
+const TEDDY_EDGE_BOTTOM = 12;
+const TEDDY_LAYOUT_WIDTH = 75;
+const TEDDY_SIDE_INSET = 20;
+const TEDDY_SLEEP_AFTER_MS = 60 * 1000;
+const TEDDY_CROSS_MS_MIN = 8000;
+const TEDDY_CROSS_MS_MAX = 10000;
+const TEDDY_SIT_MS_MIN = 4000;
+const TEDDY_SIT_MS_MAX = 5000;
+
+let lastInteractionTime = Date.now();
+
+let teddyWalkSessionId = 0;
+let teddyLocks = new Set();
+let teddyPatrolTimeouts = [];
+let teddyTransitionEndHandler = null;
+let teddyWalkFsmHooksInstalled = false;
+let teddyResizeDebounce = null;
+function getBloomTeddy() {
+  return document.getElementById('bloomTeddy');
+}
+
+function teddyGeom() {
+  let leftMin = TEDDY_SIDE_INSET;
+  let leftMax = window.innerWidth - TEDDY_LAYOUT_WIDTH;
+  if (leftMax < leftMin) {
+    leftMin = 12;
+    leftMax = Math.max(leftMin + 24, window.innerWidth - TEDDY_LAYOUT_WIDTH);
+  }
+  return { leftMin, leftMax, span: Math.max(12, leftMax - leftMin) };
+}
+
+function teddyEnsureBottomEdgeLayout() {
+  const teddy = getBloomTeddy();
+  if (!teddy) return;
+  teddy.style.bottom = `${TEDDY_EDGE_BOTTOM}px`;
+  teddy.style.top = 'auto';
+  teddy.style.right = 'auto';
+}
+
+function teddyReadLeftPx(teddy) {
+  const px = parseFloat(window.getComputedStyle(teddy).left);
+  if (Number.isFinite(px)) return px;
+  const r = teddy.getBoundingClientRect();
+  return r.left;
+}
+
+function teddySnapStartRightCorner() {
+  const teddy = getBloomTeddy();
+  if (!teddy) return;
+  teddyEnsureBottomEdgeLayout();
+  const { leftMax } = teddyGeom();
+  teddy.style.transition = 'none';
+  teddy.style.left = `${leftMax}px`;
+  void teddy.offsetWidth;
+  teddy.style.transition = '';
+  teddy.classList.remove('teddy-walk-face-flip');
+}
+
+function teddyClearPatrolTimeouts() {
+  teddyPatrolTimeouts.forEach(clearTimeout);
+  teddyPatrolTimeouts.length = 0;
+}
+
+function teddyAfterDelay(fn, ms) {
+  teddyPatrolTimeouts.push(setTimeout(fn, ms));
+}
+
+function teddyRemoveTransitEnd() {
+  const teddy = getBloomTeddy();
+  if (teddy && teddyTransitionEndHandler) {
+    teddy.removeEventListener('transitionend', teddyTransitionEndHandler);
+    teddyTransitionEndHandler = null;
+  }
+}
+
+function teddyAbortWalkFsm() {
+  teddyWalkSessionId++;
+  teddyClearPatrolTimeouts();
+  teddyRemoveTransitEnd();
+  const teddy = getBloomTeddy();
+  if (teddy) teddy.classList.remove('walking');
+}
+
+function teddyWalkBlockedByOverlay() {
+  const teddy = getBloomTeddy();
+  if (!teddy || teddy.classList.contains('sleeping')) return true;
+  return teddyLocks.has('dance') || teddyLocks.has('wave');
+}
+
+function teddySleepBlocked() {
+  return teddyLocks.has('dance') || teddyLocks.has('wave');
+}
+
+function teddyWalkTransitionMs(distancePx) {
+  const { span } = teddyGeom();
+  const frac = span > 0 ? Math.min(1, Math.max(0, distancePx / span)) : 1;
+  const fullMs = TEDDY_CROSS_MS_MIN + Math.random() * (TEDDY_CROSS_MS_MAX - TEDDY_CROSS_MS_MIN);
+  return Math.round(Math.max(500, frac * fullMs));
+}
+
+function teddyWalkToward(targetLeft, onArriveEdge) {
+  const teddy = getBloomTeddy();
+  if (!teddy || teddyWalkBlockedByOverlay()) return;
+
+  const session = ++teddyWalkSessionId;
+  teddyEnsureBottomEdgeLayout();
+
+  const { leftMin, leftMax } = teddyGeom();
+  const clamped = Math.min(leftMax, Math.max(leftMin, targetLeft));
+
+  let cur = teddyReadLeftPx(teddy);
+  if (!Number.isFinite(cur)) cur = clamped;
+
+  const movingRight = clamped > cur + 2;
+  teddy.classList.toggle('teddy-walk-face-flip', movingRight);
+
+  teddyRemoveTransitEnd();
+  const durationMs = teddyWalkTransitionMs(Math.abs(clamped - cur));
+
+  teddy.style.transition = `left ${durationMs}ms cubic-bezier(0.45, 0.05, 0.22, 1)`;
+  teddy.classList.remove('sitting');
+  teddy.classList.add('walking');
+
+  teddyTransitionEndHandler = (e) => {
+    if (e.propertyName !== 'left') return;
+    if (session !== teddyWalkSessionId) return;
+    teddyRemoveTransitEnd();
+    teddy.classList.remove('walking');
+    if (teddyWalkBlockedByOverlay()) return;
+    const edge = clamped <= leftMin + 4 ? 'left' : 'right';
+    onArriveEdge(edge);
+  };
+  teddy.addEventListener('transitionend', teddyTransitionEndHandler);
+
+  requestAnimationFrame(() => {
+    if (session !== teddyWalkSessionId) return;
+    teddy.style.left = `${clamped}px`;
+  });
+}
+
+function teddyStartSit(edge) {
+  const teddy = getBloomTeddy();
+  if (!teddy || teddyWalkBlockedByOverlay()) return;
+
+  teddy.classList.remove('walking', 'teddy-walk-face-flip');
+  teddy.classList.add('sitting');
+  teddyLocks.add('sit');
+
+  const ms = TEDDY_SIT_MS_MIN + Math.random() * (TEDDY_SIT_MS_MAX - TEDDY_SIT_MS_MIN);
+  teddyAfterDelay(() => {
+    teddy.classList.remove('sitting');
+    teddyLocks.delete('sit');
+    if (teddyWalkBlockedByOverlay()) return;
+
+    const { leftMin, leftMax } = teddyGeom();
+    if (edge === 'left') teddyWalkFsmWalkingRightToward(leftMax);
+    else teddyWalkFsmWalkingLeftToward(leftMin);
+  }, ms);
+}
+
+function teddyWalkFsmWalkingLeftToward(leftMinTarget) {
+  teddyWalkToward(leftMinTarget, (edge) => teddyStartSit('left'));
+}
+
+function teddyWalkFsmWalkingRightToward(leftMaxTarget) {
+  teddyWalkToward(leftMaxTarget, () => teddyStartSit('right'));
+}
+
+/** First leg after splash: wave ends at RIGHT → walk LEFT → sit LEFT → … */
+function teddyFsmBeginFirstWalk() {
+  const { leftMin } = teddyGeom();
+  teddyWalkFsmWalkingLeftToward(leftMin);
+}
+
+function playTeddyHappyDance() {
+  const teddy = getBloomTeddy();
+  if (!teddy || teddy.classList.contains('sleeping')) return;
+
+  teddyAbortWalkFsm();
+  teddyLocks.delete('sit');
+  teddyLocks.add('dance');
+  teddy.classList.remove('walking', 'sitting', 'happy-dance', 'teddy-walk-face-flip');
+  void teddy.offsetWidth;
+  teddy.classList.add('happy-dance');
+
+  teddyAfterDelay(() => {
+    teddy.classList.remove('happy-dance');
+    teddyLocks.delete('dance');
+    if (!teddyWalkBlockedByOverlay()) {
+      teddyAfterDelay(() => teddyResumeFsmAfterInterrupt(), 160);
+    }
+  }, 1000);
+}
+
+function teddyResumeFsmAfterInterrupt() {
+  const { leftMin, leftMax } = teddyGeom();
+  const teddy = getBloomTeddy();
+  if (!teddy) return;
+  const cur = teddyReadLeftPx(teddy);
+  const midway = (leftMin + leftMax) / 2;
+  if (!Number.isFinite(cur) || cur <= midway) teddyWalkFsmWalkingRightToward(leftMax);
+  else teddyWalkFsmWalkingLeftToward(leftMin);
+}
+
+function playTeddyWaveOnOpen() {
+  teddyAbortWalkFsm();
+  teddyLocks.delete('sit');
+  teddyLocks.add('wave');
+  const teddy = getBloomTeddy();
+  if (!teddy) return;
+  teddySnapStartRightCorner();
+  teddy.classList.remove('walking', 'sitting', 'waving', 'teddy-walk-face-flip');
+  void teddy.offsetWidth;
+  teddy.classList.add('waving');
+
+  teddyAfterDelay(() => {
+    teddy.classList.remove('waving');
+    teddyLocks.delete('wave');
+    if (!teddyWalkBlockedByOverlay()) teddyFsmBeginFirstWalk();
+  }, 1500);
+}
+
+function teddyBuildZzz() {
+  const teddy = getBloomTeddy();
+  if (!teddy) return;
+
+  // Remove music notes while sleeping
+  teddy.querySelectorAll('.music-note').forEach(n => n.style.display = 'none');
+  teddy.querySelectorAll('.teddy-zzz').forEach(n => n.remove());
+
+  const z = document.createElement('div');
+  z.className = 'teddy-zzz';
+  z.setAttribute('aria-hidden', 'true');
+  z.textContent = 'z z z';
+  teddy.appendChild(z);
+}
+
+function teddyEnterSleepIfIdle() {
+  const teddy = getBloomTeddy();
+  if (!teddy || teddy.classList.contains('sleeping')) return;
+  if (Date.now() - lastInteractionTime < TEDDY_SLEEP_AFTER_MS) return;
+  if (teddySleepBlocked()) return;
+
+  teddyAbortWalkFsm();
+  teddyLocks.clear();
+  teddyLocks.add('sleep');
+
+  // Save exact position before sleeping
+  const currentLeft = teddyReadLeftPx(teddy);
+  teddy.dataset.sleepLeft = Number.isFinite(currentLeft) 
+    ? currentLeft 
+    : teddyGeom().leftMax;
+
+  teddy.classList.remove('walking', 'sitting', 'waving', 
+    'happy-dance', 'shy', 'teddy-walk-face-flip');
+  teddy.classList.add('sleeping');
+
+  const headGroup = document.getElementById('headGroup');
+  if (headGroup) headGroup.setAttribute('transform', 'rotate(0, 70, 55)');
+  ['leftEyeGroup', 'rightEyeGroup'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.transform = '';
+  });
+
+  // Move teddy up first so rotation stays on screen
+  teddy.style.bottom = '70px';
+  teddy.style.transformOrigin = 'bottom center';
+  
+  // Small delay then rotate
+  setTimeout(() => {
+    teddy.style.transition = 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+    // Rotate direction based on which side teddy is on
+    const midway = (teddyGeom().leftMin + teddyGeom().leftMax) / 2;
+    const sleepLeft = parseFloat(teddy.dataset.sleepLeft) || 0;
+    teddy.style.transform = sleepLeft < midway 
+      ? 'rotate(-80deg)' 
+      : 'rotate(80deg)';
+  }, 50);
+
+  teddyBuildZzz();
+  setEyeFollowEnabled(false);
+}
+
+function teddyWakeFromSleep() {
+  const teddy = getBloomTeddy();
+  if (!teddy || !teddy.classList.contains('sleeping')) return;
+
+  lastInteractionTime = Date.now();
+ teddy.querySelectorAll('.teddy-zzz').forEach((n) => n.remove());
+// Restore music notes
+teddy.querySelectorAll('.music-note').forEach(n => n.style.display = '');
+  teddy.classList.remove('sleeping');
+  teddyLocks.delete('sleep');
+
+  // Restore exact position where teddy fell asleep
+  const savedLeft = parseFloat(teddy.dataset.sleepLeft);
+  if (Number.isFinite(savedLeft)) {
+    teddy.style.transition = 'none';
+    teddy.style.left = `${savedLeft}px`;
+    void teddy.offsetWidth;
+  }
+
+  // Wake up animation - bounce back upright
+  teddy.style.transition = 'transform 0.72s cubic-bezier(0.34, 1.56, 0.64, 1), bottom 0.4s ease';
+  teddy.style.transform = 'rotate(0deg)';
+  teddy.style.bottom = `${TEDDY_EDGE_BOTTOM}px`;
+
+  setTimeout(() => {
+    teddy.style.transform = '';
+    teddy.style.transition = '';
+    teddy.style.transformOrigin = '';
+    teddy.style.bottom = `${TEDDY_EDGE_BOTTOM}px`;
+  }, 750);
+
+  setEyeFollowEnabled(true);
+  playTeddyClickBounce();
+  showTeddyMessage(Math.random() < 0.5 ? 'Good morning! 🌸' : 'I\'m awake! ✨');
+
+  teddyAfterDelay(() => {
+    if (!teddyWalkBlockedByOverlay()) teddyResumeFsmAfterInterrupt();
+  }, 760);
+}
+
+function teddyOnInteractionResetSleepTimer() {
+  lastInteractionTime = Date.now();
+}
+
+/** Click / touch counts as interaction even when awake; wakes if sleeping */
+function teddyOnFinePointerInteraction() {
+  lastInteractionTime = Date.now();
+  if (getBloomTeddy()?.classList.contains('sleeping')) teddyWakeFromSleep();
+}
+
+function initTeddyWalk() {
+  if (teddyWalkFsmHooksInstalled) return;
+  teddyWalkFsmHooksInstalled = true;
+  lastInteractionTime = Date.now();
+
+  ['scroll', 'wheel'].forEach((ev) => {
+    window.addEventListener(ev, teddyOnInteractionResetSleepTimer, { passive: true });
+  });
+  window.addEventListener('mousemove', teddyOnInteractionResetSleepTimer, { passive: true });
+  window.addEventListener('keydown', teddyOnInteractionResetSleepTimer);
+
+  ['click', 'touchstart'].forEach((ev) => {
+    window.addEventListener(ev, teddyOnFinePointerInteraction, { passive: true });
+  });
+
+  window.setInterval(() => teddyEnterSleepIfIdle(), 5000);
+
+  window.addEventListener('resize', () => {
+    if (teddyResizeDebounce) clearTimeout(teddyResizeDebounce);
+    teddyResizeDebounce = setTimeout(() => {
+      const t = getBloomTeddy();
+      if (!t || t.classList.contains('walking')) return;
+      if (t.classList.contains('sleeping')) return;
+      teddyEnsureBottomEdgeLayout();
+      const { leftMin, leftMax } = teddyGeom();
+      const cur = parseFloat(window.getComputedStyle(t).left);
+      if (!Number.isFinite(cur)) return;
+      t.style.transition = 'none';
+      t.style.left = `${Math.min(leftMax, Math.max(leftMin, cur))}px`;
+      void t.offsetWidth;
+      t.style.transition = '';
+    }, 100);
+  });
+}
+
+function playTeddyClickBounce() {
   const teddy = document.getElementById('bloomTeddy');
   if (!teddy) return;
+  teddy.classList.remove('teddy-click-bounce');
+  void teddy.offsetWidth;
+  teddy.classList.add('teddy-click-bounce');
+  setTimeout(() => teddy.classList.remove('teddy-click-bounce'), 600);
+}
+
+function initBloomTeddy() {
+  const teddy = getBloomTeddy();
+  if (!teddy) return;
+
+  initTeddyWalk();
+  teddySnapStartRightCorner();
 
   teddy.addEventListener('click', (e) => {
     e.stopPropagation();
+    teddyOnFinePointerInteraction();
+    playTeddyClickBounce();
     showTeddyMessage('You\'re doing amazing! 💕');
   });
 
-  // Start natural blinking and sparkle effects
   startNaturalBlinking();
   startSparkleEffect();
-
-  // Start eye follow cursor effect
   initEyeFollowCursor();
-
-  // Initialize shy hover reaction
   initShyHoverReaction();
-
-  // Initialize Draggable Teddy
-  initTeddyDrag();
-
-  // Initialize Greeting Bubble
-  initGreetingBubble();
-
-  // Initial safe positioning check
-  setTimeout(ensureSafePosition, 500);
-
-  // Initialize Random Wandering
-  initTeddyWander();
-
-  // Initialize Expression System
   initTeddyExpressions();
+
+  playTeddyWaveOnOpen();
 }
 
 function startNaturalBlinking() {
@@ -1447,7 +1859,11 @@ function startNaturalBlinking() {
   if (!leftEyeGroup || !rightEyeGroup) return;
 
   function triggerBlink() {
-    // Add blinking class to both eye groups
+    if (getBloomTeddy()?.classList.contains('sleeping')) {
+      const nextBlinkDelay = 4000 + Math.random() * 4000;
+      blinkTimeout = setTimeout(triggerBlink, nextBlinkDelay);
+      return;
+    }
     leftEyeGroup.classList.add('blinking');
     rightEyeGroup.classList.add('blinking');
 
@@ -1507,6 +1923,9 @@ function stopTeddyAnimations() {
 }
 
 function showTeddyMessage(message) {
+  const teddy = getBloomTeddy();
+  // Don't show messages while sleeping
+  if (teddy && teddy.classList.contains('sleeping')) return;
   const bubble = document.getElementById('teddyBubble');
   if (!bubble) return;
 
@@ -1543,6 +1962,74 @@ function setTeddyState(state) {
   }
 }
 
+function getDialogue(key) {
+  const dialogues = {
+    IDLE: ["I'm here with you 💗", "Let's take it one step at a time", "You're doing great"],
+    SUCCESS: ["You did it! I knew you could 💖", "Yay! Proud of you ✨", "Little wins matter!"],
+    SAVED: ["Your thoughts are safe here 🌸", "Saved with love 💗", "You express yourself beautifully"],
+    FOCUS: ["Let's focus together 🌙", "Quiet strength mode", "I'll stay with you"],
+    FOCUS_DONE: ["You stayed with it! ⭐", "That was beautiful focus", "Rest time now 💗"],
+    MOOD_HAPPY: ["Your joy is shining ✨", "That makes me happy too!"],
+    MOOD_CALM: ["Peace looks good on you 🌿", "Breathe... just like that"],
+    MOOD_LOW: ["I'm here with you 💗", "It's okay to feel this", "You don't have to rush"]
+  };
+
+  const options = dialogues[key] || dialogues.IDLE;
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+function createConfetti() {
+  const teddy = document.getElementById('bloomTeddy');
+  if (!teddy) return;
+
+  for (let i = 0; i < 10; i++) {
+    const el = document.createElement('div');
+    el.innerHTML = '✨';
+    el.style.position = 'absolute';
+    el.style.left = '50%';
+    el.style.top = '50%';
+    el.style.fontSize = Math.random() * 10 + 10 + 'px';
+    el.style.pointerEvents = 'none';
+    el.style.transform = 'translate(-50%, -50%)';
+    el.style.transition = 'all 1s ease-out';
+    el.style.opacity = '1';
+
+    teddy.appendChild(el);
+
+    setTimeout(() => {
+      const x = (Math.random() - 0.5) * 100;
+      const y = (Math.random() - 0.5) * 100 - 50;
+      el.style.transform = `translate(${x}px, ${y}px) scale(0)`;
+      el.style.opacity = '0';
+    }, 10);
+
+    setTimeout(() => {
+      el.remove();
+    }, 1000);
+  }
+}
+
+function setTeddyEmotion(emotionKey) {
+  const teddy = document.getElementById('bloomTeddy');
+  if (!teddy) return;
+
+  const state = TEDDY_STATES[emotionKey] || TEDDY_STATES.DEFAULT;
+  currentEmotion = emotionKey;
+
+  teddy.classList.remove('happy', 'focused', 'shy', 'sleepy', 'sad');
+  if (state.eye !== 'normal') teddy.classList.add(state.eye);
+
+  teddy.classList.remove('bounce', 'hop', 'breathe', 'breatheSlow');
+  if (state.motion !== 'breathe') teddy.classList.add(state.motion);
+
+  if (emotionKey !== 'FOCUSED' && emotionKey !== 'SLEEPY' && emotionKey !== 'DEFAULT') {
+    clearTimeout(emotionTimeout);
+    emotionTimeout = setTimeout(() => {
+      setTeddyEmotion('DEFAULT');
+    }, 4000);
+  }
+}
+
 function triggerTeddyReaction(action, message = null) {
   const teddy = document.getElementById('bloomTeddy');
   if (!teddy) return;
@@ -1552,25 +2039,75 @@ function triggerTeddyReaction(action, message = null) {
       setTeddyState('happy');
       if (message) showTeddyMessage(message);
       setTimeout(() => setTeddyState(null), 600);
-      break;
+      return;
 
     case 'streak':
       setTeddyState('streak');
       if (message) showTeddyMessage(message);
       setTimeout(() => setTeddyState(null), 800);
-      break;
+      return;
 
     case 'reflection':
       setTeddyState('reflection');
       if (message) showTeddyMessage(message);
       setTimeout(() => setTeddyState(null), 1000);
-      break;
+      return;
 
     case 'focused':
       setTeddyState('focused');
       if (message) showTeddyMessage(message);
-      break;
+      return;
+
+    case 'TASK_COMPLETE':
+      setTeddyEmotion('EXCITED');
+      playTeddyHappyDance();
+      createConfetti();
+      showTeddyMessage(message || getDialogue('SUCCESS'));
+      return;
+
+    case 'NOTE_SAVED':
+      setTeddyEmotion('HAPPY');
+      showTeddyMessage(message || getDialogue('SAVED'));
+      return;
+
+    case 'FOCUS_START':
+      setTeddyEmotion('FOCUSED');
+      showTeddyMessage(message || getDialogue('FOCUS'));
+      return;
+
+    case 'FOCUS_COMPLETE':
+      setTeddyEmotion('HAPPY');
+      showTeddyMessage(message || getDialogue('FOCUS_DONE'));
+      return;
+
+    case 'MOOD_HAPPY':
+      setTeddyEmotion('HAPPY');
+      showTeddyMessage(message || getDialogue('MOOD_HAPPY'));
+      return;
+
+    case 'MOOD_CALM':
+      setTeddyEmotion('SLEEPY');
+      showTeddyMessage(message || getDialogue('MOOD_CALM'));
+      return;
+
+    case 'MOOD_LOW':
+      setTeddyEmotion('LOW');
+      showTeddyMessage(message || getDialogue('MOOD_LOW'));
+      return;
+
+    default:
+      return;
   }
+}
+
+function initTeddyExpressions() {
+  setTeddyEmotion('DEFAULT');
+
+  setInterval(() => {
+    if (currentEmotion === 'DEFAULT' && Math.random() < 0.1) {
+      showTeddyMessage(getDialogue('IDLE'));
+    }
+  }, 15000);
 }
 
 function triggerTeddyMood() {
@@ -1606,6 +2143,7 @@ function initEyeFollowCursor() {
 
   function updateEyePosition(e) {
     if (!eyeFollowEnabled) return;
+    if (teddy.classList.contains('sleeping')) return;
 
     // Get mouse/touch position
     let clientX, clientY;
@@ -1761,6 +2299,7 @@ function initShyHoverReaction() {
 
   function enterShyState(e) {
     if (isShy) return;
+    if (teddy.classList.contains('sleeping')) return;
     isShy = true;
 
     teddy.classList.add('shy');
@@ -1808,467 +2347,6 @@ function initShyHoverReaction() {
       headGroup.setAttribute('transform', `rotate(${rotation}, 70, 55)`);
     }
   });
-}
-
-// ============= TEDDY DRAG & POSITIONING FUNCTIONALITY =============
-let isDragging = false;
-let didDragMove = false; // true only if user actually moved pointer while dragging
-let dragStartX, dragStartY;
-let teddyStartX, teddyStartY;
-const DRAG_THRESHOLD_PX = 5;
-
-function initTeddyDrag() {
-  const teddy = document.getElementById('bloomTeddy');
-  if (!teddy) return;
-
-  // Mouse events
-  teddy.addEventListener('mousedown', handleDragStart);
-  document.addEventListener('mousemove', handleDragMove);
-  document.addEventListener('mouseup', handleDragEnd);
-
-  // Touch events
-  teddy.addEventListener('touchstart', handleDragStart, { passive: false });
-  document.addEventListener('touchmove', handleDragMove, { passive: false });
-  document.addEventListener('touchend', handleDragEnd);
-
-  // Handle window resize to keep teddy in bounds
-  window.addEventListener('resize', ensureSafePosition);
-}
-
-function handleDragStart(e) {
-  const teddy = document.getElementById('bloomTeddy');
-  if (e.target.closest('.teddy-bubble')) return; // Allow clicking bubble
-
-  // Prevent default to stop scrolling (except on bubble)
-  if (e.target.closest('.teddy-svg') || e.target.classList.contains('bloom-teddy')) {
-    if (e.type !== 'mousedown') e.preventDefault();
-  } else {
-    return;
-  }
-
-  isDragging = true;
-  didDragMove = false;
-  teddy.classList.add('grabbing');
-
-  // Get start positions
-  const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-  const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-
-  dragStartX = clientX;
-  dragStartY = clientY;
-
-  // Get current teddy position
-  const rect = teddy.getBoundingClientRect();
-  teddyStartX = rect.left;
-  teddyStartY = rect.top;
-
-  // Disable eye follow
-  setEyeFollowEnabled(false);
-}
-
-function handleDragMove(e) {
-  if (!isDragging) return;
-  e.preventDefault();
-
-  const teddy = document.getElementById('bloomTeddy');
-  const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-  const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-
-  const dx = clientX - dragStartX;
-  const dy = clientY - dragStartY;
-  if (Math.abs(dx) > DRAG_THRESHOLD_PX || Math.abs(dy) > DRAG_THRESHOLD_PX) {
-    didDragMove = true;
-  }
-
-  teddy.style.left = `${teddyStartX + dx}px`;
-  teddy.style.top = `${teddyStartY + dy}px`;
-  teddy.style.bottom = 'auto';
-  teddy.style.right = 'auto';
-}
-
-function handleDragEnd(e) {
-  if (!isDragging) return;
-  const wasTap = !didDragMove;
-  isDragging = false;
-
-  const teddy = document.getElementById('bloomTeddy');
-  teddy.classList.remove('grabbing');
-
-  // Re-enable eye follow
-  setEyeFollowEnabled(true);
-
-  // Only snap position when user actually dragged; keep teddy in place on simple click
-  if (didDragMove) {
-    snapToSafePosition();
-  } else if (e && e.type === 'touchend') {
-    // On mobile, touchstart preventDefault() blocks the synthetic click — trigger dialogue on tap
-    showTeddyMessage('You\'re doing amazing! 💕');
-  }
-}
-
-function snapToSafePosition() {
-  const teddy = document.getElementById('bloomTeddy');
-  const rect = teddy.getBoundingClientRect();
-  const winWidth = window.innerWidth;
-  const winHeight = window.innerHeight;
-  const padding = 20;
-
-  let targetLeft = rect.left;
-  let targetTop = rect.top;
-
-  // 1. Snap to nearest horizontal edge
-  if (rect.left + rect.width / 2 < winWidth / 2) {
-    targetLeft = padding; // Left
-  } else {
-    targetLeft = winWidth - rect.width - padding; // Right
-  }
-
-  // 2. Keep within vertical bounds
-  if (rect.top < padding) targetTop = padding;
-  if (rect.bottom > winHeight - padding) targetTop = winHeight - rect.height - padding;
-
-  // 3. Collision Detection & Avoidance
-  // Check if target position overlaps with important UI
-  const potentialRect = {
-    left: targetLeft,
-    top: targetTop,
-    right: targetLeft + rect.width,
-    bottom: targetTop + rect.height,
-    width: rect.width,
-    height: rect.height
-  };
-
-  if (checkCollision(potentialRect)) {
-    // Try alternative vertical positions
-    // Try moving up
-    let newTop = targetTop - 100;
-    let attempts = 0;
-    while (checkCollision({ ...potentialRect, top: newTop, bottom: newTop + rect.height }) && attempts < 5) {
-      newTop -= 100;
-      attempts++;
-    }
-
-    if (attempts < 5) {
-      targetTop = newTop;
-    } else {
-      // Try moving down if up fail
-      newTop = targetTop + 100;
-      attempts = 0;
-      while (checkCollision({ ...potentialRect, top: newTop, bottom: newTop + rect.height }) && attempts < 5) {
-        newTop += 100;
-        attempts++;
-      }
-      if (attempts < 5) targetTop = newTop;
-    }
-
-    // Ensure still in bounds
-    if (targetTop < padding) targetTop = padding;
-    if (targetTop + rect.height > winHeight - padding) targetTop = winHeight - rect.height - padding;
-  }
-
-  // Animate to final position
-  teddy.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-  teddy.style.left = `${targetLeft}px`;
-  teddy.style.top = `${targetTop}px`;
-  teddy.style.bottom = 'auto';
-  teddy.style.right = 'auto';
-
-  setTimeout(() => {
-    teddy.style.transition = ''; // Reset to default
-  }, 400);
-}
-
-function checkCollision(rect) {
-  // Elements to avoid
-  const obstacles = document.querySelectorAll('button, input, textarea, .card-item, .nav-item');
-
-  for (let el of obstacles) {
-    // Skip hidden elements
-    if (el.offsetParent === null) continue;
-
-    const obRect = el.getBoundingClientRect();
-
-    // Check intersection
-    if (!(rect.right < obRect.left ||
-      rect.left > obRect.right ||
-      rect.bottom < obRect.top ||
-      rect.top > obRect.bottom)) {
-      return true; // Collision detected
-    }
-  }
-  return false;
-}
-
-function ensureSafePosition() {
-  // Logic to ensure teddy isn't off screen or blocking
-  const teddy = document.getElementById('bloomTeddy');
-  if (!teddy) return;
-  snapToSafePosition();
-}
-
-// ============= SPEECH BUBBLE GREETING =============
-function initGreetingBubble() {
-  const hour = new Date().getHours();
-  let greeting = 'Good morning, Sunshine ☀️';
-
-  if (hour >= 12 && hour < 17) {
-    greeting = 'Good afternoon, Starlight 🌟';
-  } else if (hour >= 17) {
-    greeting = 'Good evening, Moonlight 🌙';
-  }
-
-  // Update dashboard greeting instead of teddy bubble
-  const greetingEl = document.querySelector('.greeting');
-  if (greetingEl) {
-    greetingEl.innerHTML = `<h2>${greeting}</h2><div class="greeting-divider"></div>`;
-  }
-}
-
-// ============= TEDDY RANDOM WANDERING =============
-function initTeddyWander() {
-  const teddy = document.getElementById('bloomTeddy');
-  if (!teddy) return;
-
-  // Start wandering loop
-  scheduleNextMove();
-}
-
-function scheduleNextMove() {
-  // Random interval between 5-15 seconds
-  const interval = Math.random() * 10000 + 5000;
-
-  setTimeout(() => {
-    if (!isDragging) {
-      performRandomMove();
-    }
-    // Continue loop regardless of drag state
-    scheduleNextMove();
-  }, interval);
-}
-
-function performRandomMove() {
-  const teddy = document.getElementById('bloomTeddy');
-  if (!teddy) return;
-
-  const winWidth = window.innerWidth;
-  const winHeight = window.innerHeight;
-  const padding = 20;
-
-  // 30% chance to hop in place, 70% to walk to new spot
-  if (Math.random() < 0.3) {
-    // Hop in place
-    teddy.classList.add('hopping');
-    setTimeout(() => {
-      teddy.classList.remove('hopping');
-    }, 1000);
-  } else {
-    // Walk to new random position
-    // Don't move too far - maybe 100-300px away
-    const rect = teddy.getBoundingClientRect();
-    const range = 250;
-
-    let targetX = rect.left + (Math.random() * range * 2 - range);
-    let targetY = rect.top + (Math.random() * range * 2 - range);
-
-    // Clamp to screen bounds
-    targetX = Math.max(padding, Math.min(winWidth - rect.width - padding, targetX));
-    targetY = Math.max(padding, Math.min(winHeight - rect.height - padding, targetY));
-
-    // Check collision for new spot
-    const potentialRect = {
-      left: targetX,
-      top: targetY,
-      right: targetX + rect.width,
-      bottom: targetY + rect.height,
-      width: rect.width,
-      height: rect.height
-    };
-
-    // If collision, try to find a safe spot or just don't move
-    if (checkCollision(potentialRect)) {
-      // Just hop instead of moving into obstacle
-      teddy.classList.add('hopping');
-      setTimeout(() => {
-        teddy.classList.remove('hopping');
-      }, 1000);
-      return;
-    }
-
-    // Animate walk
-    teddy.classList.add('walking');
-
-    // FLIP TEDDY TO FACE DIRECTION
-    const svg = teddy.querySelector('.teddy-svg');
-    if (targetX < rect.left) {
-      // Moving left
-      if (svg) svg.style.transform = 'scaleX(1)';
-    } else {
-      // Moving right - flip
-      if (svg) svg.style.transform = 'scaleX(-1)';
-    }
-
-    // Move
-    teddy.style.left = `${targetX}px`;
-    teddy.style.top = `${targetY}px`;
-
-    // Stop walking animation after arrival (approx time based on transition)
-    setTimeout(() => {
-      teddy.classList.remove('walking');
-      // Reset flip
-      if (svg) svg.style.transform = 'scaleX(1)';
-    }, 1500);
-  }
-
-  // ============= EXPRESSION SYSTEM =============
-  const TEDDY_STATES = {
-    DEFAULT: { eye: 'normal', motion: 'breathe' },
-    HAPPY: { eye: 'sparkle', motion: 'bounce' },
-    EXCITED: { eye: 'sparkle', motion: 'hop' },
-    SHY: { eye: 'shy', motion: 'shy' },
-    FOCUSED: { eye: 'focused', motion: 'breatheSlow' },
-    SLEEPY: { eye: 'sleepy', motion: 'breatheSlow' },
-    LOW: { eye: 'sad', motion: 'low' },
-    NEUTRAL: { eye: 'normal', motion: 'breathe' }
-  };
-
-  let currentEmotion = 'DEFAULT';
-  let emotionTimeout;
-
-  function initTeddyExpressions() {
-    // Hook into existing events if possible, or expose globaltrigger
-    window.triggerTeddyReaction = triggerTeddyReaction;
-
-    // Set default state
-    setTeddyEmotion('DEFAULT');
-
-    // Add idle reaction loop
-    setInterval(() => {
-      if (currentEmotion === 'DEFAULT' && Math.random() < 0.1) {
-        // Occasional blink/smile change or sparkle
-        showTeddyMessage(getDialogue('IDLE'));
-      }
-    }, 15000);
-  }
-
-  function setTeddyEmotion(emotionKey) {
-    const teddy = document.getElementById('bloomTeddy');
-    const eyeGroup = document.querySelector('.teddy-eye-group');
-    if (!teddy) return;
-
-    const state = TEDDY_STATES[emotionKey] || TEDDY_STATES.DEFAULT;
-    currentEmotion = emotionKey;
-
-    // Reset eye state (visual only, pupils handled by separate logic)
-    // For now simple class toggle on container if needed
-    teddy.classList.remove('happy', 'focused', 'shy', 'sleepy', 'sad');
-    if (state.eye !== 'normal') teddy.classList.add(state.eye);
-
-    // Motion
-    teddy.classList.remove('bounce', 'hop', 'breathe', 'breatheSlow');
-    if (state.motion !== 'breathe') teddy.classList.add(state.motion);
-
-    // Auto-revert to default after some time if not permanent state (like focus)
-    if (emotionKey !== 'FOCUSED' && emotionKey !== 'SLEEPY' && emotionKey !== 'DEFAULT') {
-      clearTimeout(emotionTimeout);
-      emotionTimeout = setTimeout(() => {
-        setTeddyEmotion('DEFAULT');
-      }, 4000);
-    }
-  }
-
-  function triggerTeddyReaction(eventType) {
-    let emotion = 'DEFAULT';
-    let dialogueKey = 'DEFAULT';
-
-    switch (eventType) {
-      case 'TASK_COMPLETE':
-        emotion = 'EXCITED';
-        dialogueKey = 'SUCCESS';
-        // Add particle effect logic here
-        createConfetti();
-        break;
-      case 'NOTE_SAVED':
-        emotion = 'HAPPY';
-        dialogueKey = 'SAVED';
-        break;
-      case 'FOCUS_START':
-        emotion = 'FOCUSED';
-        dialogueKey = 'FOCUS';
-        break;
-      case 'FOCUS_COMPLETE':
-        emotion = 'HAPPY';
-        dialogueKey = 'FOCUS_DONE';
-        break;
-      case 'MOOD_HAPPY':
-        emotion = 'HAPPY';
-        dialogueKey = 'MOOD_HAPPY';
-        break;
-      case 'MOOD_CALM':
-        emotion = 'SLEEPY'; // Calm/Sleepy share vibes
-        dialogueKey = 'MOOD_CALM';
-        break;
-      case 'MOOD_LOW':
-        emotion = 'LOW';
-        dialogueKey = 'MOOD_LOW';
-        break;
-      default:
-        emotion = 'DEFAULT';
-    }
-
-    setTeddyEmotion(emotion);
-    if (dialogueKey) {
-      showTeddyMessage(getDialogue(dialogueKey));
-    }
-  }
-
-  function getDialogue(key) {
-    const dialogues = {
-      IDLE: ["I'm here with you 💗", "Let's take it one step at a time", "You're doing great"],
-      SUCCESS: ["You did it! I knew you could 💖", "Yay! Proud of you ✨", "Little wins matter!"],
-      SAVED: ["Your thoughts are safe here 🌸", "Saved with love 💗", "You express yourself beautifully"],
-      FOCUS: ["Let's focus together 🌙", "Quiet strength mode", "I'll stay with you"],
-      FOCUS_DONE: ["You stayed with it! ⭐", "That was beautiful focus", "Rest time now 💗"],
-      MOOD_HAPPY: ["Your joy is shining ✨", "That makes me happy too!"],
-      MOOD_CALM: ["Peace looks good on you 🌿", "Breathe... just like that"],
-      MOOD_LOW: ["I'm here with you 💗", "It's okay to feel this", "You don't have to rush"]
-    };
-
-    const options = dialogues[key] || dialogues.IDLE;
-    return options[Math.floor(Math.random() * options.length)];
-  }
-
-  function createConfetti() {
-    const teddy = document.getElementById('bloomTeddy');
-    if (!teddy) return;
-
-    for (let i = 0; i < 10; i++) {
-      const el = document.createElement('div');
-      el.innerHTML = '✨';
-      el.style.position = 'absolute';
-      el.style.left = '50%';
-      el.style.top = '50%';
-      el.style.fontSize = Math.random() * 10 + 10 + 'px';
-      el.style.pointerEvents = 'none';
-      el.style.transform = `translate(-50%, -50%)`;
-      el.style.transition = 'all 1s ease-out';
-      el.style.opacity = '1';
-
-      teddy.appendChild(el);
-
-      // Animate
-
-      setTimeout(() => {
-        const x = (Math.random() - 0.5) * 100;
-        const y = (Math.random() - 0.5) * 100 - 50;
-        el.style.transform = `translate(${x}px, ${y}px) scale(0)`;
-        el.style.opacity = '0';
-      }, 10);
-
-      setTimeout(() => {
-        el.remove();
-      }, 1000);
-    }
-  }
 }
 
 // ============= FOCUS AMBIENT SYSTEM =============
@@ -2683,7 +2761,7 @@ function saveReflection() {
   const grateful = document.getElementById('reflectionGrateful').value.trim();
 
   if (!well && !felt && !grateful) {
-    alert('Please write at least one reflection 💖');
+    showReminder('Please write at least one reflection 💖');
     return;
   }
 
@@ -2705,7 +2783,7 @@ function saveReflection() {
   document.getElementById('reflectionGrateful').value = '';
 
   // Show success message
-  alert('Reflection saved 🌙✨');
+  showReminder('Reflection saved 🌙✨');
 
   // Re-render the list
   renderReflections();

@@ -1,0 +1,8 @@
+{
+  "appId": "com.anu.bloomboard",
+  "appName": "bloomboard",
+  "webDir": "www",
+"server": {
+    "androidScheme": "https"
+  }
+}

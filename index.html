@@ -284,22 +284,23 @@
     <!-- DASHBOARD TAB -->
     <div id="dashboardTab" class="tab-content active">
       <div class="greeting">
-
-        <div class="greeting-divider"></div>
+        <h2 id="greetingText">Welcome 🌸</h2>
+        <p id="greetingDate" class="greeting-date"></p>
+        <p id="affirmationText" class="affirmation-text"></p>
       </div>
 
       <div class="quick-cards">
-        <div class="card-item">
+        <div class="card-item card-tasks">
           <div class="card-icon">✓</div>
           <div class="card-label">Tasks</div>
           <div class="card-count" id="taskCount">0</div>
         </div>
-        <div class="card-item">
+        <div class="card-item card-notes">
           <div class="card-icon">📝</div>
           <div class="card-label">Notes</div>
           <div class="card-count">Today</div>
         </div>
-        <div class="card-item">
+        <div class="card-item card-streak">
           <div class="card-icon">🔥</div>
           <div class="card-label">Streak</div>
           <div class="card-count" id="streakCount">0</div>
@@ -312,8 +313,7 @@
       </div>
 
       <div class="motivational-quote">
-        <span class="quote-heart">💖</span>
-        <p id="dailyQuote">You are stronger than you think.</p>
+        <p id="dailyQuote" class="quote-text">You are stronger than you think.</p>
         <span class="quote-author">- Anonymous</span>
       </div>
     </div>
@@ -567,13 +567,8 @@
 
   </div>
 
-  <!-- Celebration overlay -->
-  <div id="celebrationOverlay">
-    <img
-      src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnM4NThkeXU2OG04Z2Y3eTZ0Z2s2ZWpmN3p2a2ZldTBlN3g3bzNkYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/xE6i72WK92RPavXXPc/giphy.gif"
-      alt="Happy dance">
-  </div>
-
+ 
+ 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="script.js"></script>
 
